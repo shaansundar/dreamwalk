@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { DotBackground } from "@/components/ui/dot-background";
+import SolanaWalletProvider from "@/hooks/wrapper/solana-wallet";
+import Header from "@/components/shared/header";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,14 +32,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex flex-col h-screen w-screen antialiased`}
       >
-        <div className="flex h-20 z-20 p-4 w-screen justify-between items-center">
-          <h1 className="text-2xl font-bold">💤 DreamWalk</h1>
-          <Button>
-            Connect Wallet
-          </Button>
-        </div>
-        {children}
-        <DotBackground />
+        <SolanaWalletProvider>
+          <Header />
+          {children}
+          <DotBackground />
+        </SolanaWalletProvider>
       </body>
     </html>
   );

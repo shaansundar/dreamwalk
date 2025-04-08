@@ -22,16 +22,12 @@ export default function Home() {
     to: 100,
   });
 
-  console.log("🚀 ~ Home ~ randomnessRange:", randomnessRange);
-
 
   useEffect(() => {
     if (randomnessRange.to - randomnessRange.from < 10) {
-      console.log("🚀 ~ useEffect ~ if:", randomnessRange.to - randomnessRange.from);
-      setFormState({ ...formState, isWarning: true, message: "Your funds are more prone to be traced if the range is too small" });
+      setFormState((prev) => ({ ...prev, isWarning: true, message: "Your funds are more prone to be traced if the range is too small" }));
     } else {
-      console.log("🚀 ~ useEffect ~ else:", randomnessRange.to - randomnessRange.from);
-      setFormState({ ...formState, isWarning: false, message: "" });
+      setFormState((prev) => ({ ...prev, isWarning: false, message: "" }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [randomnessRange.from, randomnessRange.to]);
@@ -72,10 +68,12 @@ export default function Home() {
 
               </div>
             </div>
-            <div className="flex flex-col gap-2 w-full h-fit">
+            <div className="flex flex-col gap-4 w-full h-fit">
               <Button className="w-full" disabled={formState.isError}>Mix</Button>
-              {formState.isWarning || formState.isError && <p className={cn("text-xs text-center", formState.isWarning ? "text-yellow-500" : "text-red-500")}>
+              {(formState.isWarning || formState.isError) ? <p className={cn("text-xs text-center", formState.isWarning ? "text-yellow-500" : "text-red-500")}>
                 {formState.message}
+              </p> : <p className="text-[10px] text-center">
+                Disclaimer: Please be aware that the funds you send to this mixer cannot be recovered. Please double check the destination address before sending funds.
               </p>}
             </div>
           </CardContent>
