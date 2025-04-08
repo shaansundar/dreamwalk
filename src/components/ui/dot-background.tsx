@@ -3,7 +3,7 @@ import React from "react";
 
 export function DotBackground() {
     return (
-        <div className="absolute inset-0 flex h-screen w-screen items-center justify-center bg-white dark:bg-black">
+        <div className="absolute inset-0 opacity-75 flex h-screen w-screen items-center justify-center bg-white dark:bg-black">
             <div
                 className={cn(
                     "absolute inset-0",
