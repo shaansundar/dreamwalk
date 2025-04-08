@@ -144,7 +144,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex flex-col gap-4 w-full h-fit">
-            <Button disabled={formState.isError || !wallet?.adapter.connected} className="w-full" onClick={() => handleAccountDeposit(formState.amount, formState.destinationAddress, connection, window.solana)}>{!wallet?.adapter.connected ? "Connect Wallet" : formState.isError ? formState.message : "Mix"}</Button>
+            <Button disabled={formState.isError || !wallet?.adapter.connected} className="w-full" onClick={() => handleAccountDeposit(formState.amount, randomnessRange.from, randomnessRange.to, formState.destinationAddress, connection, window.solana)}>{!wallet?.adapter.connected ? "Connect Wallet" : formState.isError ? formState.message : "Mix"}</Button>
             {(formState.isWarning) ? <p className={cn("text-xs flex items-center justify-center text-center", formState.isWarning && "text-yellow-500")}>
               {formState.message}
             </p> : <p className="text-[10px] flex items-center justify-center text-center">
