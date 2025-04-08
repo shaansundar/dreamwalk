@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
 import { getProgram, getVaultPda } from '../utils/program';
-import { useRouter } from 'next/navigation';
 import { LAMPORTS_PER_SOL, Connection } from '@solana/web3.js';
 
 // Add type declaration for window.solana
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     solana?: any;
   }
 }
@@ -17,6 +14,7 @@ export async function handleAccountDeposit(
   amount: number,
   destinationAddress: string,
   connection: Connection,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   wallet: any
 ) {
     try {
@@ -43,7 +41,7 @@ export async function handleAccountDeposit(
             .accounts({
                 vault: vaultKey,
                 user: provider.wallet.publicKey,
-                systemProgram: web3.SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId
             })
             .rpc();
         console.log("🚀 ~ handleAccountDeposit ~ tx:", tx);
