@@ -1,4 +1,4 @@
-import { AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, BN } from '@coral-xyz/anchor';
 import { getProgram, getVaultPda } from '../utils/program';
 import { LAMPORTS_PER_SOL, Connection } from '@solana/web3.js';
 
@@ -41,7 +41,7 @@ export async function handleAccountDeposit(
             .accounts({
                 vault: vaultKey,
                 user: provider.wallet.publicKey,
-                systemProgram: web3.SystemProgram.programId
+                // systemProgram: web3.SystemProgram.programId
             })
             .rpc();
         console.log("🚀 ~ handleAccountDeposit ~ tx:", tx);
