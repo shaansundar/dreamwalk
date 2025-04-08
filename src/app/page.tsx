@@ -9,6 +9,9 @@ import { handleAccountDeposit } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 export default function Home() {
 
@@ -28,29 +31,56 @@ export default function Home() {
   const { connection } = useConnection();
   const { wallet } = useWallet();
 
+  const { data: balance } = useQuery({
+    queryKey: ["balance", wallet?.adapter.publicKey],
+    queryFn: async () => {
+      if (!wallet?.adapter.publicKey) return null;
+      const mpcEddsaPublicKey = new PublicKey(wallet?.adapter.publicKey || "");
+      const lamports = await connection.getBalance(mpcEddsaPublicKey);
+      return parseFloat(lamports.toString()) / LAMPORTS_PER_SOL;
+    },
+  });
 
   useEffect(() => {
-    if (randomnessRange.to - randomnessRange.from < 10) {
-      setFormState((prev) => ({ ...prev, isWarning: true, message: "Your funds are more prone to be traced if the range is too small" }));
-    } else {
-      setFormState((prev) => ({ ...prev, isWarning: false, message: "" }));
+    switch (true) {
+      case formState.destinationAddress === "":
+        setFormState((prev) => ({ ...prev, isError: true, isWarning: false, message: "Please enter a destination address" }));
+        break;
+      case !formState.amount:
+        setFormState((prev) => ({ ...prev, isError: true, isWarning: false, message: "Please enter an amount" }));
+        break;
+      case balance && balance > 0 && formState.amount > balance:
+        setFormState((prev) => ({ ...prev, isError: true, isWarning: false, message: "Insufficient balance" }));
+        break;
+      case randomnessRange.to - randomnessRange.from < 10:
+        setFormState((prev) => ({ ...prev, isError: false, isWarning: true, message: "Your funds are more prone to be traced if the range is too small" }));
+        break;
+      default:
+        setFormState((prev) => ({ ...prev, isError: false, isWarning: false, message: "" }));
+        break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [randomnessRange.from, randomnessRange.to]);
+  }, [randomnessRange.from, randomnessRange.to, formState.amount, formState.destinationAddress, balance]);
 
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormState({ ...formState, [e.target.name]: e.target.value });
+    if (e.target.name === "amount") {
+      const amount = parseFloat(e.target.value);
+      if (isNaN(amount)) setFormState({ ...formState, [e.target.name]: 0 });
+      else setFormState({ ...formState, [e.target.name]: amount });
+    } else {
+      setFormState({ ...formState, [e.target.name]: e.target.value });
+    }
   };
 
   const tableValues = [
     {
       title: "Amount",
-      value: formState.amount,
+      value: formState.amount + " SOL",
     },
     {
       title: "Destination Address",
-      value: formState.destinationAddress,
+      value: formState.destinationAddress.slice(0, 6) + "..." + formState.destinationAddress.slice(-6) || "Not set",
     },
     {
       title: "Randomness Range",
@@ -62,17 +92,17 @@ export default function Home() {
     },
     {
       title: "Minimum Receivable Amount",
-      value: "0.001 SOL",
+      value: `${formState.amount * (randomnessRange.from / 100)} SOL`,
     },
     {
       title: "Maximum Receivable Amount",
-      value: "0.005 SOL",
+      value: `${formState.amount * (randomnessRange.to / 100)} SOL`,
     },
   ]
 
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full">
+    <div className="flex flex-col px-4 items-center justify-center w-full h-full">
       {/* <BackgroundGradient className="bg-zinc-900 rounded-lg"> */}
       <Card className="w-fit z-20 flex flex-col h-fit">
         <CardHeader className="flex flex-col gap-2">
@@ -83,12 +113,15 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-6 w-full h-fit">
             <div className="flex flex-col gap-6 w-full">
               <div className="flex flex-col gap-2">
-                <Label>Amount</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label>Amount</Label>
+                  <p className="text-xs">Balance: {balance?.toFixed(4)} SOL</p>
+                </div>
                 <Input type="number" placeholder="0.00" name="amount" onChange={handleFormChange} />
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Destination Address</Label>
-                <Input type="text" placeholder="J8SupDkrcr8z25XC4BZJcUdZ5h8Hyf9R9S6oAY3rXNN" name="destinationAddress" onChange={handleFormChange} />
+                <Input type="text" placeholder="J8Su....rXNN" name="destinationAddress" onChange={handleFormChange} />
               </div>
               <div className="flex flex-col gap-4">
                 <Label>Randomness Range</Label>
@@ -100,7 +133,7 @@ export default function Home() {
               </div>
 
             </div>
-            <Separator orientation="vertical" />
+            <Separator className="h-full hidden sm:block" orientation="vertical" />
             <div className="flex flex-col gap-2 w-full h-full justify-evenly rounded-md border border-input bg-input p-2">
               {tableValues.map((value) => (
                 <div key={value.title} className="flex justify-between">
@@ -111,8 +144,8 @@ export default function Home() {
             </div>
           </div>
           <div className="flex flex-col gap-4 w-full h-fit">
-            <Button className="w-full" onClick={() => handleAccountDeposit(formState.amount, formState.destinationAddress, connection, window.solana)} disabled={formState.isError}>Mix</Button>
-            {(formState.isWarning || formState.isError) ? <p className={cn("text-xs flex items-center justify-center text-center", formState.isWarning ? "text-yellow-500" : "text-red-500")}>
+            <Button disabled={formState.isError || !wallet?.adapter.connected} className="w-full" onClick={() => handleAccountDeposit(formState.amount, formState.destinationAddress, connection, window.solana)}>{!wallet?.adapter.connected ? "Connect Wallet" : formState.isError ? formState.message : "Mix"}</Button>
+            {(formState.isWarning) ? <p className={cn("text-xs flex items-center justify-center text-center", formState.isWarning && "text-yellow-500")}>
               {formState.message}
             </p> : <p className="text-[10px] flex items-center justify-center text-center">
               Disclaimer: Please be aware that the funds you send to this mixer cannot be recovered. Please double check the destination address before sending funds.
