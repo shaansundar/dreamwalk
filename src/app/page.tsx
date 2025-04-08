@@ -5,7 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { handleAccountDeposit } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { useEffect, useState } from "react";
 export default function Home() {
 
@@ -21,6 +25,9 @@ export default function Home() {
     from: 0,
     to: 100,
   });
+
+  const { connection } = useConnection();
+  const { wallet } = useWallet();
 
 
   useEffect(() => {
@@ -69,7 +76,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-col gap-4 w-full h-fit">
-              <Button className="w-full" disabled={formState.isError}>Mix</Button>
+              <Button className="w-full" disabled={formState.isError} onClick={() => handleAccountDeposit(formState.amount, formState.destinationAddress, connection, window.solana)}>Mix</Button>
               {(formState.isWarning || formState.isError) ? <p className={cn("text-xs text-center", formState.isWarning ? "text-yellow-500" : "text-red-500")}>
                 {formState.message}
               </p> : <p className="text-[10px] text-center">
